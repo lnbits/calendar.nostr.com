@@ -1,10 +1,24 @@
-
 const routes = [
   {
+    path: '/login',
+    name: 'Login',
+    component: () => import('src/pages/LoginRegister.vue')
+  },
+  {
+    path: '/calendar/:id',
+    name: 'Calendar',
+    component: () => import('src/pages/AppointmentPage.vue')
+  },
+  {
     path: '/',
+    name: 'Index',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/IndexPage.vue') }
+      {
+        path: '',
+        component: () => import('src/pages/DashboardPage.vue'),
+        name: 'Dashboard'
+      }
     ]
   },
 

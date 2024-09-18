@@ -1,1 +1,112 @@
-// app global css in SCSS form
+/* app global css */
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap');
+@import 'vue-cal/dist/vuecal.css';
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Lexend', ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, Noto Sans,
+    sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol,
+    Noto Color Emoji;
+}
+
+.text-h1,
+.text-h2,
+.text-h3,
+.text-h4,
+.text-h5,
+.text-h6 {
+  font-family: 'Lexend', ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, Noto Sans,
+    sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol,
+    Noto Color Emoji;
+}
+
+.bg-image {
+  background: $primary;
+  background: linear-gradient(142deg, $primary 65%, $secondary 170%);
+  min-height: 100vh;
+  .svg {
+    opacity: 30%;
+  }
+}
+
+.container,
+.container-fluid {
+  max-width: $breakpoint-lg-min;
+  width: 100%;
+  margin-right: auto;
+  margin-left: auto;
+  padding-right: 1rem;
+  padding-left: 1rem;
+}
+
+.container {
+  @media (min-width: $breakpoint-sm-min) {
+    max-width: 700px;
+  }
+
+  @media (min-width: $breakpoint-md-min) {
+    max-width: 950px;
+  }
+
+  @media (min-width: $breakpoint-lg-min) {
+    max-width: 1200px;
+  }
+
+  @media (min-width: $breakpoint-xl-min) {
+    max-width: 1450px;
+  }
+}
+
+/* Calendar-theme. */
+.vuecal {
+  min-height: inherit;
+  color: white;
+}
+.vuecal__menu,
+.vuecal__cell-events-count {
+  background-color: $primary;
+  color: white;
+}
+.vuecal__title-bar {
+  background-color: $primary;
+  margin-bottom: 1rem;
+
+  & * {
+    color: $secondary;
+    text-transform: uppercase;
+  }
+}
+.vuecal__cell--today,
+.vuecal__cell--current {
+  background-color: rgba(240, 240, 255, 0.4);
+}
+.vuecal:not(.vuecal--day-view) .vuecal__cell--selected {
+  background-color: rgba(235, 255, 245, 0.4);
+}
+.vuecal__cell--selected:before {
+  border-color: $secondary;
+}
+.vuecal__menu,
+.vuecal__cell-events-count {
+  background-color: $secondary;
+  color: $primary;
+  font-size: 1rem;
+  line-height: 0;
+  padding: 10px;
+}
+/* Cells and buttons get highlighted when an event is dragged over it. */
+.vuecal__cell--highlighted:not(.vuecal__cell--has-splits),
+.vuecal__cell-split--highlighted {
+  // background-color: rgba(195, 255, 225, 0.5);
+  background-color: $primary;
+}
+.vuecal__arrow.vuecal__arrow--highlighted,
+.vuecal__view-btn.vuecal__view-btn--highlighted {
+  background-color: rgba(136, 236, 191, 0.25);
+}

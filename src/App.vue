@@ -9,3 +9,9 @@ export default defineComponent({
   name: 'App'
 })
 </script>
+
+<style>
+html, body {
+background: #f2f8ff;
+}
+</style>

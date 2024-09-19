@@ -3,7 +3,8 @@ import {defineStore} from 'pinia'
 export const useCalendarStore = defineStore('calendar', {
   state: () => ({
     date: new Date(),
-    view: 'week'
+    view: 'week',
+    calendars: []
   }),
   getters: {
     // get date is type string

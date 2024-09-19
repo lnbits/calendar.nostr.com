@@ -125,6 +125,8 @@ const register = async () => {
       password_repeat: password.value
     })
     $acc.addUsername(username.value)
+    // enable lncalendar extension
+    await api.post('/extension/lncalendar/enable')
     this.q.notify({
       message: 'Signed Up!',
       color: 'positive'

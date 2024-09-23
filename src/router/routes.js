@@ -5,7 +5,7 @@ const routes = [
     component: () => import('src/pages/LoginRegister.vue')
   },
   {
-    path: '/calendar/:id',
+    path: '/:id',
     name: 'Calendar',
     component: () => import('src/pages/AppointmentPage.vue')
   },
@@ -14,13 +14,18 @@ const routes = [
     name: 'Index',
     component: () => import('layouts/MainLayout.vue'),
     children: [
+      // {
+      //   path: '',
+      //   component: () => import('src/pages/DashboardPage.vue'),
+      //   name: 'Dashboard'
+      // },
       {
         path: '',
-        component: () => import('src/pages/DashboardPage.vue'),
-        name: 'Dashboard'
+        component: () => import('src/pages/CalendarsPage.vue'),
+        name: 'Calendars'
       },
       {
-        path: '/settings',
+        path: '/calendars/:id',
         component: () => import('src/pages/SettingsPage.vue'),
         name: 'Settings'
       }

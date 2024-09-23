@@ -53,7 +53,7 @@ module.exports = configure(function (/* ctx */) {
         node: 'node16'
       },
 
-      vueRouterMode: 'hash', // available values: 'hash', 'history'
+      vueRouterMode: 'history', // available values: 'hash', 'history'
       // vueRouterBase,
       // vueDevtools,
       // vueOptionsAPI: false,
@@ -68,7 +68,7 @@ module.exports = configure(function (/* ctx */) {
         termsAndConditionsUrl:
           'https://raw.githubusercontent.com/lnbits/my.nostr.com/terms_and_conditions/terms_and_conditions.md',
         // dev vars:
-        apiUrl: 'https://localhost:9000'
+        apiUrl: ''
       }
       // rawDefine: {}
       // ignorePublicFolder: true,
@@ -88,7 +88,7 @@ module.exports = configure(function (/* ctx */) {
     devServer: {
       // https: true
       open: true, // opens browser window automatically
-      port: 8080,
+      port: 7070,
       strictPort: true
     },
 
@@ -107,7 +107,7 @@ module.exports = configure(function (/* ctx */) {
       // directives: [],
 
       // Quasar plugins
-      plugins: []
+      plugins: ['AppFullscreen', 'Notify', 'Dialog']
     },
 
     // animations: 'all', // --- includes all animations

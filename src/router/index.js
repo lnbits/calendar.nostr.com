@@ -36,24 +36,21 @@ export default route(function (/* { store, ssrContext } */) {
   })
 
   Router.beforeEach(async (to, from) => {
+    if (
+      // make sure the user is authenticated
+      !username //&&
+      // ❗️ Avoid an infinite redirect
+      //to.name !== 'Login'
+    ) {
+      // redirect the user to the login page
+      return (window.location.href = 'https://my.nostr.com/login')
+    }
     if (to.path == '/') {
       return
     }
-    if (to.name == 'Calendar') {
-      return
-    }
-    if (
-      // make sure the user is authenticated
-      !username &&
-      // ❗️ Avoid an infinite redirect
-      to.name !== 'Login'
-    ) {
-      // redirect the user to the login page
-      return {name: 'Login'}
-    }
-    if (to.name == 'Login' && username) {
-      return {name: 'Dashboard'}
-    }
+    // if (to.name == 'Login' && username) {
+    //   return {name: 'Dashboard'}
+    // }
   })
 
   return Router

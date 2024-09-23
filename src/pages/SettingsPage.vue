@@ -1,7 +1,7 @@
 <template>
   <q-page class="q-pa-md container">
     <q-card
-      class="nostr-card text-white no-shadow q-mt-xl"
+      class="nostr-card text-white no-shadow q-my-xl"
       bordered
     >
       <q-tabs
@@ -21,11 +21,11 @@
         <q-tab
           v-if="calendar"
           name="unavailable"
-          label="Unavailable"
+          label="Availability"
         />
         <q-tab
           name="settings"
-          :label="!calendar ? 'Create Calendar' : 'Edit Calendar'"
+          :label="!calendar ? 'Create Calendar' : 'Details'"
         />
       </q-tabs>
       <q-separator />
@@ -47,190 +47,44 @@
                 dark
                 flat
                 color="secondary"
+                :options="availableDaysFn"
+                :events="appointmentsFn"
+                @navigation="handleNavigation"
               />
             </div>
             <div class="appointments--items">
-              <div class="q-mb-lg q-ml-md text-h6">Appointments</div>
+              <div class="flex justify-between">
+                <div class="q-mb-lg q-ml-md text-h6">Appointments</div>
+                <q-input
+                  v-model="searchStr"
+                  dark
+                  dense
+                  rounded
+                  standout
+                  label="Search"
+                  placeholder="Search for an appointment"
+                  @keydown.escape="searchStr = ''"
+                  ><template v-slot:append>
+                    <q-icon
+                      v-if="searchStr !== ''"
+                      name="close"
+                      @click="searchStr = ''"
+                      class="cursor-pointer"
+                    />
+                    <q-icon
+                      v-else
+                      name="search"
+                    /> </template
+                ></q-input>
+              </div>
               <q-scroll-area class="scroll-height">
                 <q-list>
-                  <q-item>
-                    <q-item-section>
-                      <q-item-label>Single line item</q-item-label>
-                      <q-item-label
-                        caption
-                        lines="2"
-                        >Secondary line text. Lorem ipsum dolor sit amet,
-                        consectetur adipiscit elit.</q-item-label
-                      >
-                    </q-item-section>
-
-                    <q-item-section
-                      side
-                      top
-                    >
-                      <q-item-label caption>5 min ago</q-item-label>
-                      <q-icon
-                        name="star"
-                        color="yellow"
-                      />
-                    </q-item-section>
-                  </q-item>
-
-                  <q-separator
-                    spaced
-                    inset
-                    color="secondary"
-                  />
-
-                  <q-item>
-                    <q-item-section>
-                      <q-item-label>Single line item</q-item-label>
-                      <q-item-label
-                        caption
-                        lines="2"
-                        >Secondary line text. Lorem ipsum dolor sit amet,
-                        consectetur adipiscit elit.</q-item-label
-                      >
-                    </q-item-section>
-
-                    <q-item-section
-                      side
-                      top
-                    >
-                      <q-item-label caption>5 min ago</q-item-label>
-                      <q-icon
-                        name="star"
-                        color="yellow"
-                      />
-                    </q-item-section>
-                  </q-item>
-
-                  <q-separator
-                    spaced
-                    inset
-                    color="secondary"
-                  />
-                  <q-item>
-                    <q-item-section>
-                      <q-item-label>Single line item</q-item-label>
-                      <q-item-label
-                        caption
-                        lines="2"
-                        >Secondary line text. Lorem ipsum dolor sit amet,
-                        consectetur adipiscit elit.</q-item-label
-                      >
-                    </q-item-section>
-
-                    <q-item-section
-                      side
-                      top
-                    >
-                      <q-item-label caption>5 min ago</q-item-label>
-                      <q-icon
-                        name="star"
-                        color="yellow"
-                      />
-                    </q-item-section>
-                  </q-item>
-
-                  <q-separator
-                    spaced
-                    inset
-                    color="secondary"
-                  />
-                  <q-item>
-                    <q-item-section>
-                      <q-item-label>Single line item</q-item-label>
-                      <q-item-label caption
-                        >Secondary line text. Lorem ipsum dolor sit amet,
-                        consectetur adipiscit elit.</q-item-label
-                      >
-                    </q-item-section>
-
-                    <q-item-section
-                      side
-                      top
-                    >
-                      <q-item-label caption>Voted!</q-item-label>
-                    </q-item-section>
-                  </q-item>
-
-                  <q-separator
-                    spaced
-                    inset
-                    color="secondary"
-                  />
-
-                  <q-item>
-                    <q-item-section>
-                      <q-item-label>Single line item</q-item-label>
-                      <q-item-label caption
-                        >Secondary line text. Lorem ipsum dolor sit amet,
-                        consectetur adipiscit elit.</q-item-label
-                      >
-                    </q-item-section>
-
-                    <q-item-section
-                      side
-                      top
-                    >
-                      <q-badge
-                        color="teal"
-                        label="10k"
-                      />
-                    </q-item-section>
-                  </q-item>
-
-                  <q-separator
-                    spaced
-                    inset
-                    color="secondary"
-                  />
-
-                  <q-item>
-                    <q-item-section>
-                      <q-item-label>Single line item</q-item-label>
-                      <q-item-label caption
-                        >Secondary line text. Lorem ipsum dolor sit amet,
-                        consectetur adipiscit elit.</q-item-label
-                      >
-                    </q-item-section>
-
-                    <q-item-section
-                      side
-                      top
-                    >
-                      <q-item-label caption>2 min ago</q-item-label>
-                      <div class="text-orange">
-                        <q-icon name="star" />
-                        <q-icon name="star" />
-                        <q-icon name="star" />
-                      </div>
-                    </q-item-section>
-                  </q-item>
-
-                  <q-separator
-                    spaced
-                    inset
-                    color="secondary"
-                  />
-
-                  <q-item>
-                    <q-item-section>
-                      <q-item-label>Single line item</q-item-label>
-                      <q-item-label caption
-                        >Secondary line text. Lorem ipsum dolor sit amet,
-                        consectetur adipiscit elit.</q-item-label
-                      >
-                    </q-item-section>
-
-                    <q-item-section
-                      side
-                      top
-                    >
-                      <q-item-label caption>meta</q-item-label>
-                    </q-item-section>
-                  </q-item>
+                  <template
+                    v-for="event in filteredAppointments"
+                    :key="event.id"
+                  >
+                    <EventItem :event="event" />
+                  </template>
                 </q-list>
               </q-scroll-area>
             </div>
@@ -263,7 +117,7 @@
               </q-card-actions>
             </div>
             <div class="appointments--items">
-              <div class="q-mb-lg q-ml-md text-h6">Unavailable Dates</div>
+              <div class="q-mb-lg q-ml-md text-h6">Availability</div>
               <q-list>
                 <q-item
                   tag="label"
@@ -329,193 +183,7 @@
           name="settings"
           class="q-pa-none"
         >
-          <q-card-section v-if="$cal.calendars.length == 0">
-            <div class="text-h6">Create a calendar</div>
-            <div class="text-subtitle2">
-              Create a calendar to start acceptin appointments
-            </div>
-          </q-card-section>
-          <q-card-section>
-            <q-select
-              class="q-mb-lg"
-              color="secondary"
-              standout
-              dark
-              map-options
-              hint="Funds will be sent to this wallet"
-              label="Select Wallet"
-              v-model="calendar_data.wallet"
-              :options="userWallets"
-            ></q-select>
-            <q-input
-              dark
-              standout
-              class="q-mb-lg"
-              v-model.trim="calendar_data.name"
-              type="name"
-              label="Your calendar name"
-            ></q-input>
-            <small>Time per appointment</small>
-            <q-slider
-              class="q-px-md q-mt-sm q-mb-xl"
-              v-model="calendar_data.timeslot"
-              color="secondary"
-              dark
-              markers
-              :step="30"
-              snap
-              :marker-labels="timeSlots"
-              :min="30"
-              :max="120"
-            />
-            <div class="row q-mb-lg q-col-gutter-md">
-              <q-select
-                class="col-12 col-sm-6"
-                dark
-                standout
-                map-options
-                emit-value
-                v-model="calendar_data.start_day"
-                :options="weekdays"
-                label="Weekday start *"
-              >
-              </q-select>
-              <q-select
-                class="col-12 col-sm-6"
-                dark
-                standout
-                map-options
-                emit-value
-                v-model="calendar_data.end_day"
-                :options="weekdays"
-                label="Weekday end *"
-              >
-              </q-select>
-            </div>
-            <div class="row q-mb-lg q-col-gutter-md">
-              <q-input
-                class="col-12 col-sm-6"
-                dark
-                standout
-                v-model="calendar_data.start_time"
-                type="time"
-                label="Time start *"
-                ><template v-slot:after>
-                  <q-icon
-                    round
-                    dense
-                    flat
-                    name="schedule"
-                    class="cursor-pointer"
-                    ><q-popup-proxy
-                      transition-show="scale"
-                      transition-hide="scale"
-                    >
-                      <q-time
-                        v-model="calendar_data.start_time"
-                        :format24h="format24h"
-                      >
-                        <div class="row items-center justify-end q-gutter-sm">
-                          <q-toggle
-                            class="col-12"
-                            v-model="format24h"
-                            label="24h format"
-                          ></q-toggle>
-                          <q-btn
-                            label="Cancel"
-                            color="primary"
-                            flat
-                            v-close-popup
-                          ></q-btn>
-                          <q-btn
-                            label="OK"
-                            color="primary"
-                            flat
-                            v-close-popup
-                          ></q-btn>
-                        </div>
-                      </q-time> </q-popup-proxy
-                  ></q-icon> </template
-              ></q-input>
-              <q-input
-                class="col-12 col-sm-6"
-                dark
-                standout
-                v-model="calendar_data.end_time"
-                type="time"
-                label="Time end *"
-                ><template v-slot:after>
-                  <q-icon
-                    round
-                    dense
-                    flat
-                    name="schedule"
-                    class="cursor-pointer"
-                    ><q-popup-proxy
-                      transition-show="scale"
-                      transition-hide="scale"
-                    >
-                      <q-time
-                        v-model="calendar_data.end_time"
-                        :format24h="format24h"
-                      >
-                        <div class="row items-center justify-end q-gutter-sm">
-                          <q-toggle
-                            class="col-12"
-                            v-model="format24h"
-                            label="24h format"
-                          ></q-toggle>
-                          <q-btn
-                            label="Cancel"
-                            color="primary"
-                            flat
-                            v-close-popup
-                          ></q-btn>
-                          <q-btn
-                            label="OK"
-                            color="primary"
-                            flat
-                            v-close-popup
-                          ></q-btn>
-                        </div>
-                      </q-time> </q-popup-proxy
-                  ></q-icon> </template
-              ></q-input>
-            </div>
-            <div class="row q-mb-lg q-col-gutter-md">
-              <q-input
-                class="col-12 col-sm-6"
-                dark
-                standout
-                v-model="calendar_data.currency"
-                disable
-                label="Currency"
-              />
-              <q-input
-                class="col-12 col-sm-6"
-                dark
-                standout
-                v-model="calendar_data.amount"
-                type="number"
-                label="How much to charge per appointment *"
-              />
-            </div>
-          </q-card-section>
-          <q-separator color="secondary"></q-separator>
-
-          <q-card-actions
-            align="right"
-            class="q-pa-md"
-          >
-            <q-btn
-              @click="null"
-              rounded
-              class="text-capitalize"
-              color="secondary"
-              text-color="primary"
-              label="Create Calendar"
-            />
-          </q-card-actions>
+          <CreateEditCalendar :calendar="calendar" />
         </q-tab-panel>
       </q-tab-panels>
     </q-card>
@@ -523,43 +191,76 @@
 </template>
 
 <script setup>
-import {ref} from 'vue'
+import {computed, ref, onMounted} from 'vue'
+import {api} from 'src/boot/axios'
 import {useCalendarStore} from 'src/stores/calendar'
+import {useRoute} from 'vue-router'
+
+import CreateEditCalendar from 'src/components/CreateEditCalendar.vue'
+import EventItem from 'src/components/EventItem.vue'
 
 const $cal = useCalendarStore()
+const $route = useRoute()
 
-const weekdays = [
-  {label: 'Sunday', value: 0},
-  {label: 'Monday', value: 1},
-  {label: 'Tuesday', value: 2},
-  {label: 'Wednesday', value: 3},
-  {label: 'Thursday', value: 4},
-  {label: 'Friday', value: 5},
-  {label: 'Saturday', value: 6}
-]
-
-const timeSlots = [
-  {label: '30m', value: 30},
-  {label: '1 hour', value: 60},
-  {label: '2 hours', value: 120}
-]
-
-const format24h = ref(true)
-const calendar = ref(true)
-const tab = ref('appointments')
-const calendar_data = ref({
-  wallet: '',
-  name: '',
-  timeslot: 30,
-  start_day: 1,
-  end_day: 5,
-  start_time: '08:00',
-  end_time: '17:00',
-  currency: 'sats',
-  amount: 0
+const filterRange = ref({
+  year: $cal.today.getFullYear(),
+  month: $cal.today.getMonth()
 })
+
+const calendar = $cal.calendars.find(c => c.id === $route.params.id)
+const appointments = ref([])
+const appointmentsDates = ref([])
+const searchStr = ref('')
+
+const filteredAppointments = computed(() => {
+  console.log(searchStr.value)
+  if (searchStr.value.length > 2) {
+    return appointments.value.filter(a => {
+      return (
+        a.name.toLowerCase().includes(searchStr.value.toLowerCase()) ||
+        a.info.toLowerCase().includes(searchStr.value.toLowerCase())
+      )
+    })
+  }
+  return appointments.value.filter(a => {
+    return (
+      new Date(a.start_time).getFullYear() === filterRange.value.year &&
+      new Date(a.start_time).getMonth() === filterRange.value.month
+    )
+  })
+})
+
+const tab = ref('appointments')
 const date = ref(new Date().toString())
 const unavailableRange = ref(null)
+
+const availableDaysFn = date => {
+  if (new Date(date) < $cal.today) return false
+  let weekday = new Date(date).getDay() - 1
+  return calendar.available_days.some(d => d === weekday)
+}
+
+async function getAppointments(id) {
+  try {
+    const {data} = await api.get(`/lncalendar/api/v1/appointment/${id}`)
+    $cal.appointments.set(id, data)
+    appointments.value = $cal.appointments.get(id)
+    appointmentsDates.value = data.map(a => a.start_time.split(' ')[0])
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+const appointmentsFn = date => {
+  return appointmentsDates.value.includes(date)
+}
+
+const handleNavigation = view => (filterRange.value = view)
+
+onMounted(async () => {
+  const id = $route.params.id
+  await getAppointments(id)
+})
 </script>
 
 <style scoped lang="scss">

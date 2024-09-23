@@ -5,19 +5,15 @@ const savedUsername = localStorage.getItem('username')
 
 export const useAccountStore = defineStore('account', {
   state: () => ({
-    username: savedUsername
+    username: savedUsername,
+    wallets: []
   }),
   getters: {
     isLoggedIn: state => !!state.username
   },
   actions: {
-    addUsername(username) {
-      this.username = username
-      localStorage.setItem('username', username)
-    },
-    logout() {
-      this.username = ''
-      localStorage.clear()
+    setWallets(wallets) {
+      this.wallets = wallets
     }
   }
 })

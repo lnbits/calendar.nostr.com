@@ -98,12 +98,13 @@
             <div class="calendar">
               <q-date
                 class="full-width"
-                v-model="date"
+                v-model="unavailableRange"
                 minimal
                 range
                 dark
                 flat
                 color="accent"
+                :options="availableDaysFn"
               />
               <q-card-actions class="q-mt-lg">
                 <q-btn

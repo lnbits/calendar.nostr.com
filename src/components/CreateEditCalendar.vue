@@ -205,6 +205,7 @@
       flat
       color="secondary"
       :label="isNew ? 'Cancel' : 'Reset'"
+      :disable="!isNew && !hasChanged()"
     />
     <q-btn
       @click="handleCalendar"
@@ -263,7 +264,7 @@ const timeSlots = [
 const isNew = ref(true)
 const format24h = ref(true)
 const calendar_data = ref({
-  wallet: '',
+  wallet: $acc.wallets[0],
   name: props.name,
   timeslot: 30,
   start_day: 1,
@@ -289,11 +290,10 @@ function handleCalendar() {
 }
 
 function handleCancel() {
-  console.log('handleCancel', props.calendar)
   if (isNew.value) {
     props.cancel()
   } else {
-    calendar_data.value = originalData
+    calendar_data.value = {...originalData}
   }
 }
 
@@ -331,7 +331,11 @@ async function createCalendar() {
       color: 'positive'
     })
   } catch (error) {
-    console.error(error)
+    $q.notify({
+      message: 'Failed to create calendars!',
+      color: 'negative',
+      icon: 'warning'
+    })
   } finally {
     props.cancel()
   }

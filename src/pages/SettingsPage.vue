@@ -85,7 +85,10 @@
                     v-for="event in filteredAppointments"
                     :key="event.id"
                   >
-                    <EventItem :event="event" />
+                    <EventItem
+                      :event="event"
+                      :delete="deleteAppointment"
+                    />
                   </template>
                 </q-list>
               </q-scroll-area>
@@ -109,15 +112,28 @@
                 :options="availableDaysFn"
                 :events="appointmentsFn"
                 @navigation="handleNavigation"
+                @range-start="handleRangeStart"
+                @range-end="handleRangeEnd"
               />
-              <q-card-actions class="q-mt-lg">
+              <q-card-actions
+                class="q-mt-lg"
+                v-if="unavailableRangeIsSet"
+              >
+                <q-input
+                  class="full-width q-mb-md"
+                  dark
+                  standout
+                  v-model="unavailableName"
+                  type="text"
+                  label="Add an optional label"
+                />
                 <q-btn
-                  @click="null"
+                  @click="createUnavailable"
                   rounded
                   class="text-capitalize"
                   color="secondary"
                   text-color="primary"
-                  label="Set Unavailable"
+                  label="Create Unavailable"
                 />
               </q-card-actions>
             </div>
@@ -152,7 +168,10 @@
                     v-for="event in filteredUnavailable"
                     :key="event.id"
                   >
-                    <AvailabilityItem :event="event" />
+                    <AvailabilityItem
+                      :event="event"
+                      :delete="deleteUnavailable"
+                    />
                   </template>
                 </q-list>
               </q-scroll-area>
@@ -175,6 +194,7 @@ import {computed, ref, onMounted} from 'vue'
 import {api} from 'src/boot/axios'
 import {useCalendarStore} from 'src/stores/calendar'
 import {useRoute} from 'vue-router'
+import {useQuasar} from 'quasar'
 import {extractUnavailableDates} from 'src/utils/date'
 
 import CreateEditCalendar from 'src/components/CreateEditCalendar.vue'
@@ -183,6 +203,7 @@ import AvailabilityItem from 'src/components/AvailabilityItem.vue'
 
 const $cal = useCalendarStore()
 const $route = useRoute()
+const $q = useQuasar()
 
 const filterRange = ref({
   year: $cal.today.getFullYear(),
@@ -194,21 +215,21 @@ const tab = ref('unavailable')
 const date = ref(new Date().toString())
 
 // APPOINTMENTS
-const appointments = ref([])
+//const appointments = ref([])
 const appointmentsDates = ref([])
 const searchStr = ref('')
 
 const filteredAppointments = computed(() => {
-  console.log(searchStr.value)
+  const appointments = $cal.appointments.get(calendar.id) || []
   if (searchStr.value.length > 2) {
-    return appointments.value.filter(a => {
+    return appointments.filter(a => {
       return (
         a.name.toLowerCase().includes(searchStr.value.toLowerCase()) ||
         a.info.toLowerCase().includes(searchStr.value.toLowerCase())
       )
     })
   }
-  return appointments.value.filter(a => {
+  return appointments.filter(a => {
     return (
       new Date(a.start_time).getFullYear() === filterRange.value.year &&
       new Date(a.start_time).getMonth() + 1 === filterRange.value.month
@@ -217,25 +238,28 @@ const filteredAppointments = computed(() => {
 })
 
 // UNAVAILABLE
-const unavailable = ref([])
+// const unavailable = ref([])
 const unavailableDates = ref(new Set())
 const searchStrUn = ref('')
 
+const unavailableRange = ref(null)
+const unavailableRangeIsSet = ref(false)
+const unavailableName = ref('')
+
 const filteredUnavailable = computed(() => {
+  const unavailable = $cal.unavailable.get(calendar.id) || []
   if (searchStrUn.value.length > 2) {
-    return unavailable.value.filter(a => {
+    return unavailable.filter(a => {
       return a.name.toLowerCase().includes(searchStrUn.value.toLowerCase())
     })
   }
-  return unavailable.value.filter(a => {
+  return unavailable.filter(a => {
     return (
       new Date(a.start_time).getFullYear() === filterRange.value.year &&
       new Date(a.start_time).getMonth() + 1 === filterRange.value.month
     )
   })
 })
-
-const unavailableRange = ref(null)
 
 const availableDaysFn = date => {
   if (new Date(date) < $cal.today) return false
@@ -247,10 +271,28 @@ async function getAppointments(id) {
   try {
     const {data} = await api.get(`/lncalendar/api/v1/appointment/${id}`)
     $cal.appointments.set(id, data)
-    appointments.value = $cal.appointments.get(id)
     appointmentsDates.value = data.map(a => a.start_time.split(' ')[0])
   } catch (error) {
     console.error(error)
+  }
+}
+
+async function deleteAppointment(appointmentId) {
+  try {
+    await api.delete(`/lncalendar/api/v1/appointment/${appointmentId}`)
+    $cal.deleteAppointment(calendar.id, appointmentId)
+    $q.notify({
+      message: 'Appointment deleted!',
+      color: 'positive',
+      icon: 'done'
+    })
+  } catch (error) {
+    console.error(error)
+    $q.notify({
+      message: 'Failed to delete appointment!',
+      color: 'negative',
+      icon: 'warning'
+    })
   }
 }
 
@@ -258,11 +300,57 @@ async function getUnavailable(id) {
   try {
     const {data} = await api.get(`/lncalendar/api/v1/unavailable/${id}`)
     $cal.unavailable.set(id, data)
-    unavailable.value = $cal.unavailable.get(id)
     unavailableDates.value = extractUnavailableDates(data)
-    console.log(unavailable.value)
   } catch (error) {
     console.error(error)
+  }
+}
+
+async function deleteUnavailable(unavailableId) {
+  try {
+    await api.delete(
+      `/lncalendar/api/v1/unavailable/${calendar.id}/${unavailableId}`
+    )
+    $cal.deleteUnavailable(calendar.id, unavailableId)
+    $q.notify({
+      message: 'Unavailable time range deleted!',
+      color: 'positive',
+      icon: 'done'
+    })
+  } catch (error) {
+    console.error(error)
+    $q.notify({
+      message: 'Failed to delete unavailable time range!',
+      color: 'negative',
+      icon: 'warning'
+    })
+  }
+}
+
+async function createUnavailable() {
+  try {
+    const {from, to} = unavailableRange.value
+    const {data} = await api.post(`/lncalendar/api/v1/unavailable`, {
+      start_time: from,
+      end_time: to,
+      name: unavailableName.value.trim(),
+      schedule: calendar.id
+    })
+    $cal.addUnavailable(calendar.id, data)
+    const unavailable = $cal.unavailable.get(calendar.id)
+    unavailableDates.value = extractUnavailableDates(unavailable)
+    $q.notify({
+      message: 'Unavailable time range set!',
+      color: 'positive',
+      icon: 'done'
+    })
+  } catch (error) {
+    console.error(error)
+    $q.notify({
+      message: 'Failed to set unavailable time range!',
+      color: 'negative',
+      icon: 'warning'
+    })
   }
 }
 
@@ -276,10 +364,25 @@ const appointmentsFn = date => {
 
 const handleNavigation = view => (filterRange.value = view)
 
+const handleRangeStart = () => {
+  if (unavailableRangeIsSet.value) {
+    unavailableRangeIsSet.value = false
+  }
+}
+
+const handleRangeEnd = () => {
+  console.log(unavailableRange.value)
+  unavailableRangeIsSet.value = true
+}
+
 onMounted(async () => {
   const id = $route.params.id
   await getAppointments(id)
   await getUnavailable(id)
+  handleNavigation({
+    year: $cal.today.getFullYear(),
+    month: $cal.today.getMonth() + 1
+  })
 })
 </script>
 

@@ -44,6 +44,30 @@ export const useCalendarStore = defineStore('calendar', {
         return
       }
       this.appointments.set(calendarId, appointments)
+    },
+    deleteAppointment(calendarId, id) {
+      const currentAppointments = this.appointments
+        .get(calendarId)
+        .filter(a => a.id !== id)
+      this.appointments.set(calendarId, currentAppointments)
+    },
+    getUnavailable(calendarId) {
+      return this.unavailable.get(calendarId) || []
+    },
+    addUnavailable(calendarId, unavailable) {
+      if (!this.unavailable.has(calendarId)) {
+        this.unavailable.set(calendarId, [unavailable])
+        return
+      } else {
+        const currentUnavailable = this.getUnavailable(calendarId)
+        this.unavailable.set(calendarId, [...currentUnavailable, unavailable])
+      }
+    },
+    deleteUnavailable(calendarId, id) {
+      const currentUnavailable = this.unavailable
+        .get(calendarId)
+        .filter(u => u.id !== id)
+      this.unavailable.set(calendarId, currentUnavailable)
     }
   }
 })

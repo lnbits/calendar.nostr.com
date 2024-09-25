@@ -20,18 +20,21 @@
               <q-item
                 clickable
                 v-close-popup
+                disable
               >
                 <q-item-section>Contact</q-item-section>
               </q-item>
               <q-item
                 clickable
                 v-close-popup
+                disable
               >
                 <q-item-section>Edit</q-item-section>
               </q-item>
               <q-item
                 clickable
                 v-close-popup
+                disable
               >
                 <q-item-section>Reschedule</q-item-section>
               </q-item>
@@ -40,6 +43,7 @@
                 clickable
                 v-close-popup
                 class="text-negative text-weight-bold"
+                @click="deleteEvent"
               >
                 <q-item-section>Delete</q-item-section>
               </q-item>
@@ -58,9 +62,12 @@
 <script setup>
 import {timeFromNow} from 'src/utils/date'
 
-const props = defineProps(['event'])
-const event = props.event
+const props = defineProps(['event', 'delete'])
 
-const scheduled = timeFromNow(event.start_time)
-const booked = timeFromNow(event.created_at)
+const scheduled = timeFromNow(props.event.start_time)
+const booked = timeFromNow(props.event.created_at)
+
+const deleteEvent = () => {
+  props.delete(props.event.id)
+}
 </script>

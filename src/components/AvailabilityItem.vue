@@ -21,6 +21,7 @@
               <q-item
                 clickable
                 v-close-popup
+                disable
               >
                 <q-item-section>Edit</q-item-section>
               </q-item>
@@ -30,6 +31,7 @@
                 clickable
                 v-close-popup
                 class="text-negative text-weight-bold"
+                @click="deleteUnavailable"
               >
                 <q-item-section>Delete</q-item-section>
               </q-item>
@@ -46,25 +48,25 @@
   />
 </template>
 <script setup>
-import {timeFromNow} from 'src/utils/date'
-
-const {event} = defineProps(['event'])
-//const event = props.event
-console.log(event)
+const props = defineProps(['event', 'delete'])
 
 const displayDate = () => {
-  if (event.start_time == event.end_time) {
-    return `Unavailable on ${event.start_time}`
+  if (props.event.start_time == props.event.end_time) {
+    return `Unavailable on ${props.event.start_time}`
   } else {
-    return `Unavailable from ${event.start_time} to ${event.end_time}`
+    return `Unavailable from ${props.event.start_time} to ${props.event.end_time}`
   }
 }
 
 const numberOfDays = () => {
-  const start = new Date(event.start_time)
-  const end = new Date(event.end_time)
+  const start = new Date(props.event.start_time)
+  const end = new Date(props.event.end_time)
   const diffTime = Math.abs(end - start)
   const diffDays = Math.max(Math.ceil(diffTime / (1000 * 60 * 60 * 24)), 1)
   return diffDays
+}
+
+const deleteUnavailable = () => {
+  props.delete(props.event.id)
 }
 </script>

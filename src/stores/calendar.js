@@ -7,6 +7,7 @@ export const useCalendarStore = defineStore('calendar', {
     view: 'week',
     calendars: [],
     appointments: new Map(),
+    unavailable: new Map(),
     initiated: false
   }),
   getters: {

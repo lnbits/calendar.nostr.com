@@ -54,7 +54,9 @@
             </div>
             <div class="appointments--items">
               <div class="flex justify-between">
-                <div class="q-mb-lg q-ml-md text-h6">Appointments</div>
+                <div class="q-mb-lg q-ml-md text-h6">
+                  Appointments ({{ filteredAppointments.length }})
+                </div>
                 <q-input
                   v-model="searchStr"
                   dark
@@ -105,6 +107,8 @@
                 flat
                 color="accent"
                 :options="availableDaysFn"
+                :events="appointmentsFn"
+                @navigation="handleNavigation"
               />
               <q-card-actions class="q-mt-lg">
                 <q-btn
@@ -118,65 +122,40 @@
               </q-card-actions>
             </div>
             <div class="appointments--items">
-              <div class="q-mb-lg q-ml-md text-h6">Availability</div>
-              <q-list>
-                <q-item
-                  tag="label"
-                  v-ripple
-                >
-                  <q-item-section avatar>
-                    <q-checkbox
-                      dark
-                      :model-value="false"
-                      val="orange"
-                      color="secondary"
-                    />
-                  </q-item-section>
-                  <q-item-section>
-                    <q-item-label>Unavailable</q-item-label>
-                    <q-item-label caption
-                      >From 2024/10/01 to 2024/10/15</q-item-label
-                    >
-                  </q-item-section>
-                </q-item>
-                <q-separator
-                  spaced
-                  inset
-                  color="secondary"
-                />
-                <q-item
-                  tag="label"
-                  v-ripple
-                >
-                  <q-item-section avatar>
-                    <q-checkbox
-                      dark
-                      :model-value="true"
-                      val="orange"
-                      color="secondary"
-                    />
-                  </q-item-section>
-                  <q-item-section>
-                    <q-item-label>Unavailable</q-item-label>
-                    <q-item-label caption
-                      >From 2024/09/07 to 2024/09/15</q-item-label
-                    >
-                  </q-item-section>
-                </q-item>
-              </q-list>
-              <q-card-actions
-                class="q-mt-lg"
-                align="right"
-              >
-                <q-btn
-                  @click="null"
+              <div class="flex justify-between">
+                <div class="q-mb-lg q-ml-md text-h6">Availability</div>
+                <q-input
+                  v-model="searchStrUn"
+                  dark
+                  dense
                   rounded
-                  class="text-capitalize"
-                  color="secondary"
-                  text-color="primary"
-                  label="Delete Selected"
-                />
-              </q-card-actions>
+                  standout
+                  label="Search"
+                  placeholder="Search..."
+                  @keydown.escape="searchStrUn = ''"
+                  ><template v-slot:append>
+                    <q-icon
+                      v-if="searchStrUn !== ''"
+                      name="close"
+                      @click="searchStrUn = ''"
+                      class="cursor-pointer"
+                    />
+                    <q-icon
+                      v-else
+                      name="search"
+                    /> </template
+                ></q-input>
+              </div>
+              <q-scroll-area class="scroll-height">
+                <q-list>
+                  <template
+                    v-for="event in filteredUnavailable"
+                    :key="event.id"
+                  >
+                    <AvailabilityItem :event="event" />
+                  </template>
+                </q-list>
+              </q-scroll-area>
             </div>
           </q-card-section>
         </q-tab-panel>
@@ -196,9 +175,11 @@ import {computed, ref, onMounted} from 'vue'
 import {api} from 'src/boot/axios'
 import {useCalendarStore} from 'src/stores/calendar'
 import {useRoute} from 'vue-router'
+import {extractUnavailableDates} from 'src/utils/date'
 
 import CreateEditCalendar from 'src/components/CreateEditCalendar.vue'
 import EventItem from 'src/components/EventItem.vue'
+import AvailabilityItem from 'src/components/AvailabilityItem.vue'
 
 const $cal = useCalendarStore()
 const $route = useRoute()
@@ -209,6 +190,10 @@ const filterRange = ref({
 })
 
 const calendar = $cal.calendars.find(c => c.id === $route.params.id)
+const tab = ref('unavailable')
+const date = ref(new Date().toString())
+
+// APPOINTMENTS
 const appointments = ref([])
 const appointmentsDates = ref([])
 const searchStr = ref('')
@@ -226,19 +211,36 @@ const filteredAppointments = computed(() => {
   return appointments.value.filter(a => {
     return (
       new Date(a.start_time).getFullYear() === filterRange.value.year &&
-      new Date(a.start_time).getMonth() === filterRange.value.month
+      new Date(a.start_time).getMonth() + 1 === filterRange.value.month
     )
   })
 })
 
-const tab = ref('appointments')
-const date = ref(new Date().toString())
+// UNAVAILABLE
+const unavailable = ref([])
+const unavailableDates = ref(new Set())
+const searchStrUn = ref('')
+
+const filteredUnavailable = computed(() => {
+  if (searchStrUn.value.length > 2) {
+    return unavailable.value.filter(a => {
+      return a.name.toLowerCase().includes(searchStrUn.value.toLowerCase())
+    })
+  }
+  return unavailable.value.filter(a => {
+    return (
+      new Date(a.start_time).getFullYear() === filterRange.value.year &&
+      new Date(a.start_time).getMonth() + 1 === filterRange.value.month
+    )
+  })
+})
+
 const unavailableRange = ref(null)
 
 const availableDaysFn = date => {
   if (new Date(date) < $cal.today) return false
   let weekday = new Date(date).getDay() - 1
-  return calendar.available_days.some(d => d === weekday)
+  return calendar.available_days.some(d => d === weekday) && unavailableFn(date)
 }
 
 async function getAppointments(id) {
@@ -252,6 +254,22 @@ async function getAppointments(id) {
   }
 }
 
+async function getUnavailable(id) {
+  try {
+    const {data} = await api.get(`/lncalendar/api/v1/unavailable/${id}`)
+    $cal.unavailable.set(id, data)
+    unavailable.value = $cal.unavailable.get(id)
+    unavailableDates.value = extractUnavailableDates(data)
+    console.log(unavailable.value)
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+const unavailableFn = date => {
+  return !unavailableDates.value.has(date)
+}
+
 const appointmentsFn = date => {
   return appointmentsDates.value.includes(date)
 }
@@ -261,6 +279,7 @@ const handleNavigation = view => (filterRange.value = view)
 onMounted(async () => {
   const id = $route.params.id
   await getAppointments(id)
+  await getUnavailable(id)
 })
 </script>
 

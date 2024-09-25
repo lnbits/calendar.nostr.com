@@ -1,14 +1,15 @@
 <template>
   <q-item dark>
     <q-item-section>
-      <q-item-label overline>{{ event.name }}</q-item-label>
-      <q-item-label lines="2">{{ event.info }}</q-item-label>
-      <q-item-label caption>Booked {{ booked }}</q-item-label>
+      <q-item-label overline>{{ event.name || 'Unavailable' }}</q-item-label>
+      <q-item-label>{{ displayDate() }}</q-item-label>
     </q-item-section>
 
     <q-item-section side>
       <div class="flex flex-center">
-        <q-item-label class="text-white q-mr-md">{{ scheduled }}</q-item-label>
+        <q-item-label class="text-white q-mr-md">{{
+          numberOfDays() > 1 ? `${numberOfDays()} days` : `1 day`
+        }}</q-item-label>
         <q-btn
           flat
           round
@@ -21,20 +22,9 @@
                 clickable
                 v-close-popup
               >
-                <q-item-section>Contact</q-item-section>
-              </q-item>
-              <q-item
-                clickable
-                v-close-popup
-              >
                 <q-item-section>Edit</q-item-section>
               </q-item>
-              <q-item
-                clickable
-                v-close-popup
-              >
-                <q-item-section>Reschedule</q-item-section>
-              </q-item>
+
               <q-separator />
               <q-item
                 clickable
@@ -58,9 +48,23 @@
 <script setup>
 import {timeFromNow} from 'src/utils/date'
 
-const props = defineProps(['event'])
-const event = props.event
+const {event} = defineProps(['event'])
+//const event = props.event
+console.log(event)
 
-const scheduled = timeFromNow(event.start_time)
-const booked = timeFromNow(event.created_at)
+const displayDate = () => {
+  if (event.start_time == event.end_time) {
+    return `Unavailable on ${event.start_time}`
+  } else {
+    return `Unavailable from ${event.start_time} to ${event.end_time}`
+  }
+}
+
+const numberOfDays = () => {
+  const start = new Date(event.start_time)
+  const end = new Date(event.end_time)
+  const diffTime = Math.abs(end - start)
+  const diffDays = Math.max(Math.ceil(diffTime / (1000 * 60 * 60 * 24)), 1)
+  return diffDays
+}
 </script>

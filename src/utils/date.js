@@ -20,3 +20,23 @@ export function timeFromNow(date) {
     timeUnit
   )
 }
+
+export const extractUnavailableDates = arr => {
+  const unavailableSet = new Set()
+  arr.forEach(obj => {
+    const startDate = new Date(obj.start_time)
+    const endDate = new Date(obj.end_time)
+
+    for (
+      let date = startDate;
+      date <= endDate;
+      date.setDate(date.getDate() + 1)
+    ) {
+      const formattedDate = `${date.getFullYear()}/${
+        date.getMonth() + 1
+      }/${date.getDate()}`
+      unavailableSet.add(formattedDate)
+    }
+  })
+  return unavailableSet
+}

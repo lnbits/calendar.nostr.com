@@ -14,15 +14,15 @@ const routes = [
     name: 'Index',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      // {
-      //   path: '',
-      //   component: () => import('src/pages/DashboardPage.vue'),
-      //   name: 'Dashboard'
-      // },
       {
         path: '',
         component: () => import('src/pages/CalendarsPage.vue'),
         name: 'Calendars'
+      },
+      {
+        path: 'fullcalendar',
+        component: () => import('src/pages/DashboardPage.vue'),
+        name: 'FullCalendar'
       },
       {
         path: '/calendars/:id',

@@ -287,7 +287,10 @@ const availableDaysFn = date => {
 async function getAppointments(id) {
   try {
     const {data} = await api.get(`/lncalendar/api/v1/appointment/${id}`)
-    $cal.appointments.set(id, data)
+    $cal.appointments.set(
+      id,
+      data.filter(a => a.paid)
+    )
     appointmentsDates.value = data.map(a => a.start_time.split(' ')[0])
   } catch (error) {
     console.error(error)

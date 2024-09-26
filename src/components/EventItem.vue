@@ -3,12 +3,22 @@
     <q-item-section>
       <q-item-label overline>{{ event.name }}</q-item-label>
       <q-item-label lines="2">{{ event.info }}</q-item-label>
+      <q-item-label
+        caption
+        class="q-mb-sm"
+        >{{ timeSlotString() }}</q-item-label
+      >
       <q-item-label caption>Booked {{ booked }}</q-item-label>
     </q-item-section>
 
     <q-item-section side>
       <div class="flex flex-center">
-        <q-item-label class="text-white q-mr-md">{{ scheduled }}</q-item-label>
+        <div class="text-right q-mr-md">
+          <q-item-label class="text-white">{{ scheduled }}</q-item-label>
+          <q-item-label caption>{{
+            event.start_time.split(' ')[0]
+          }}</q-item-label>
+        </div>
         <q-btn
           flat
           round
@@ -63,11 +73,20 @@
 import {timeFromNow} from 'src/utils/date'
 
 const props = defineProps(['event', 'delete'])
+console.log(props.event)
 
 const scheduled = timeFromNow(props.event.start_time)
 const booked = timeFromNow(props.event.created_at)
 
 const deleteEvent = () => {
   props.delete(props.event.id)
+}
+
+const timeSlotString = () => {
+  const start = props.event.start_time
+  const end = props.event.end_time
+  const timeslot = (new Date(end) - new Date(start)) / 60000
+  const timeStr = timeslot > 60 ? `${timeslot / 60} hours` : `${timeslot} min.`
+  return `${timeStr} at ${start.split(' ')[1]}`
 }
 </script>

@@ -78,7 +78,7 @@
               color="secondary"
               text-color="primary"
               label="Schedule"
-              @click="toggleConfirm"
+              @click="createAppointment"
             />
           </div>
         </q-card-section>
@@ -118,7 +118,7 @@
                       color="primary"
                       label="Book"
                       class="q-ml-sm"
-                      @click="createAppointment"
+                      @click="toggleConfirm"
                     />
                   </q-btn-group>
                 </div>
@@ -138,6 +138,59 @@
       />
     </div>
   </div>
+  <q-dialog
+    v-model="dataDialog"
+    :backdrop-filter="'blur(4px) saturate(150%)'"
+  >
+    <q-card
+      style="width: 350px"
+      class="q-pa-md text-center"
+    >
+      <q-card-section v-if="paymentDetails?.payment_request">
+        <p class="caption">
+          Scan the QR code below using a lightning wallet to secure your Nostr
+          identity.
+        </p>
+        <div class="text-h6">
+          <span>Appointment at {{ timeSlot }} on {{ date }}</span>
+        </div>
+        <div class="responsive">
+          <a :href="'lightning:' + paymentDetails.payment_request">
+            <vue-qrcode
+              :value="paymentDetails.payment_request"
+              :options="{width: 500}"
+            ></vue-qrcode>
+          </a>
+        </div>
+      </q-card-section>
+      <q-card-section>
+        <q-linear-progress
+          indeterminate
+          color="secondary"
+          class="q-mt-sm"
+        />
+        <div class="row q-mt-md">
+          <q-btn
+            v-if="paymentDetails?.payment_request"
+            rounded
+            unelevated
+            text-color="primary"
+            color="secondary"
+            @click="copyData(paymentDetails.payment_request)"
+            label="Copy Invoice"
+            class="text-capitalize"
+          ></q-btn>
+          <q-btn
+            @click="resetDataDialog"
+            flat
+            color="grey"
+            class="q-ml-auto text-capitalize"
+            label="Close"
+          ></q-btn>
+        </div>
+      </q-card-section>
+    </q-card>
+  </q-dialog>
 </template>
 
 <script setup>
@@ -146,8 +199,11 @@ import {api} from 'src/boot/axios'
 import {useRoute} from 'vue-router'
 import BgSvg from 'src/components/BgSvg.vue'
 import {extractUnavailableDates, timeslotsByInterval} from 'src/utils/date'
+import VueQrcode from '@chenfengyuan/vue-qrcode'
+import {useQuasar, copyToClipboard} from 'quasar'
 
 const $route = useRoute()
+const $q = useQuasar()
 const loaded = ref(false)
 const today = new Date()
 
@@ -163,13 +219,15 @@ const appointments = ref([])
 const unavailableDates = ref(new Set())
 
 const filteredAppointments = computed(() => {
-  console.log('filteredAppointments')
   return appointments.value.filter(
     a =>
       new Date(a.start_time).toDateString() ===
       new Date(date.value).toDateString()
   )
 })
+
+const dataDialog = ref(false)
+const paymentDetails = ref({})
 
 const toggleSlot = slot => {
   timeSlot.value = timeSlot.value === slot ? null : slot
@@ -182,10 +240,19 @@ const toggleConfirm = () => {
 function timeSlotsFn() {
   const start = calendar.value.start_time
   const end = calendar.value.end_time
-  const timeInterval = calendar.value.timeslots
+  const timeInterval = calendar.value.timeslot
   const timeslots = timeslotsByInterval(start, end, timeInterval)
 
   return timeslots
+}
+
+const copyData = data => {
+  copyToClipboard(data)
+
+  $q.notify({
+    message: 'Copied',
+    color: 'grey'
+  })
 }
 
 const unavailableFn = date => {
@@ -250,27 +317,78 @@ async function getUnavailable(calendarId) {
 // create appointment
 async function createAppointment() {
   const timeslots = timeSlotsFn()
+  const createAppointment = {
+    name: userData.value.name,
+    email: userData.value.email,
+    info: userData.value.text,
+    start_time: `${date.value} ${timeSlot.value}`,
+    end_time: `${date.value} ${
+      timeslots[timeslots.indexOf(timeSlot.value) + 1]
+    }`,
+    schedule: calendar.value.id
+  }
   try {
-    console.log('createAppointment')
-    console.log(userData.value)
-    console.log(timeSlot.value)
-    console.log(timeslots[timeslots.indexOf(timeSlot.value) + 1])
-    // const {data} = await api.post(
-    //   `/lncalendar/api/v1/appointment`,
-    //   {
-    //     ...userData.value,
-    //     date: date.value,
-    //     time: timeSlot.value
-    //   }
-    // )
-    // appointments.value = [...appointments.value, data]
-    // userData.value = {}
-    // timeSlot.value = null
-    // toggleConfirm()
+    dataDialog.value = true
+    const {data} = await api.post(`/lncalendar/api/v1/appointment`, {
+      ...createAppointment
+    })
+    console.log(data)
+    if (data.payment_request) {
+      paymentDetails.value = {...data}
+      subscribeToPaylinkWs(data.payment_hash)
+
+      $q.notify({
+        message: 'Pay the invoice to complete the purchase',
+        color: 'positive',
+        position: 'bottom',
+        timeout: 5000
+      })
+    }
+    return data
   } catch (error) {
     console.error(error)
+    dataDialog.value = false
+    $q.notify({
+      message: 'Failed to generate invoice',
+      caption: error.response?.data?.detail,
+      color: 'negative'
+    })
   }
 }
+
+// Payment WS
+const subscribeToPaylinkWs = payment_hash => {
+  const url = new URL(process.env.apiUrl || window.location)
+  url.protocol = url.protocol === 'https:' ? 'wss' : 'ws'
+  url.pathname = `/api/v1/ws/${payment_hash}`
+  const ws = new WebSocket(url)
+  ws.addEventListener('message', async ({data}) => {
+    const resp = JSON.parse(data)
+    if (!resp.pending || resp.paid) {
+      $q.notify({
+        type: 'positive',
+        message: 'Invoice Paid!'
+      })
+      resetDataDialog()
+      ws.close()
+      appointments.value = [...appointments.value, data]
+      userData.value = {}
+      timeSlot.value = null
+      toggleConfirm()
+      $q.notify({
+        message: 'Appointment created successfully',
+        color: 'positive',
+        position: 'bottom'
+      })
+    }
+  })
+}
+
+const resetDataDialog = () => {
+  dataDialog.value = false
+  paymentDetails.value = {}
+}
+
 onMounted(async () => {
   const calendarId = $route.params.id
   await getSchedule(calendarId)
@@ -313,6 +431,14 @@ onMounted(async () => {
   }
   .slot {
     max-height: 50vh;
+  }
+}
+
+.responsive {
+  canvas {
+    width: 100% !important;
+    height: auto !important;
+    object-fit: contain;
   }
 }
 

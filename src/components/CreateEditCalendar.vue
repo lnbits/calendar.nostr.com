@@ -205,19 +205,20 @@
       flat
       color="secondary"
       :label="isNew ? 'Cancel' : 'Reset'"
-      :disable="!isNew && !hasChanged()"
+      :disable="!hasChanged()"
     />
     <q-btn
       @click="handleCalendar"
       :disable="
-        !calendar_data.wallet ||
-        !calendar_data.name ||
-        !calendar_data.start_day ||
-        !calendar_data.end_day ||
-        !calendar_data.start_time ||
-        !calendar_data.end_time ||
-        !calendar_data.amount ||
-        (!isNew && !hasChanged())
+        isNew
+          ? !calendar_data.wallet ||
+            !calendar_data.name ||
+            !calendar_data.start_day ||
+            !calendar_data.end_day ||
+            !calendar_data.start_time ||
+            !calendar_data.end_time ||
+            !calendar_data.amount
+          : !hasChanged()
       "
       rounded
       class="text-capitalize"
@@ -279,7 +280,10 @@ const calendar_data = ref({
 let originalData = {...props.calendar} || {}
 
 const hasChanged = () => {
-  return JSON.stringify(calendar_data.value) !== JSON.stringify(originalData)
+  return (
+    !isNew.value &&
+    JSON.stringify(calendar_data.value) !== JSON.stringify(originalData)
+  )
 }
 
 function handleCalendar() {

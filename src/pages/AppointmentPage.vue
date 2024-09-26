@@ -148,8 +148,8 @@
     >
       <q-card-section v-if="paymentDetails?.payment_request">
         <p class="caption">
-          Scan the QR code below using a lightning wallet to secure your Nostr
-          identity.
+          Scan the QR code below using a lightning wallet to book the
+          appointment.
         </p>
         <div class="text-h6">
           <span>Appointment at {{ timeSlot }} on {{ date }}</span>
@@ -289,6 +289,10 @@ async function getSchedule(calendarId) {
     calendar.value = data
   } catch (error) {
     console.error(error)
+    $q.notify({
+      message: 'Failed to fetch schedule',
+      color: 'negative'
+    })
   }
 }
 
@@ -297,8 +301,13 @@ async function getAppointments(calendarId) {
     title
     const {data} = await api.get(`lncalendar/api/v1/appointment/${calendarId}`)
     appointments.value = data
+    console.log(data)
   } catch (error) {
     console.error(error)
+    $q.notify({
+      message: 'Failed to fetch appointments',
+      color: 'negative'
+    })
   }
 }
 
@@ -311,6 +320,10 @@ async function getUnavailable(calendarId) {
     ])
   } catch (error) {
     console.error(error)
+    $q.notify({
+      message: 'Failed to fetch unavailable dates',
+      color: 'negative'
+    })
   }
 }
 
@@ -320,6 +333,7 @@ async function createAppointment() {
   const createAppointment = {
     name: userData.value.name,
     email: userData.value.email,
+    nostr_pubkey: userData.value.nostr,
     info: userData.value.text,
     start_time: `${date.value} ${timeSlot.value}`,
     end_time: `${date.value} ${
@@ -371,7 +385,7 @@ const subscribeToPaylinkWs = payment_hash => {
       })
       resetDataDialog()
       ws.close()
-      appointments.value = [...appointments.value, data]
+      await getAppointments(calendar.value.id)
       userData.value = {}
       timeSlot.value = null
       toggleConfirm()

@@ -272,7 +272,8 @@ const calendar_data = ref({
   start_time: '08:00',
   end_time: '17:00',
   currency: 'sats',
-  amount: 0
+  amount: 0,
+  timeslot: 30
 })
 
 let originalData = {...props.calendar} || {}

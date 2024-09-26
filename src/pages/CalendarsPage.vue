@@ -1,5 +1,17 @@
 <template>
   <q-page class="q-pa-md container">
+    <div class="q-gutter-md">
+      <q-breadcrumbs
+        class="text-grey-4 q-mb-lg"
+        active-color="secondary"
+      >
+        <q-breadcrumbs-el
+          icon="home"
+          to="/"
+        />
+        <q-breadcrumbs-el label="Calendars" />
+      </q-breadcrumbs>
+    </div>
     <q-card
       v-if="isCreating"
       class="nostr-card text-white no-shadow q-my-xl"

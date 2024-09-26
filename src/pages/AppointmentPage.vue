@@ -1,7 +1,10 @@
 <template>
   <div class="bg-image flex flex-center">
     <BgSvg />
-    <div class="flex-center container">
+    <div
+      class="flex-center container"
+      v-if="loaded"
+    >
       <q-card
         class="nostr-card text-white no-shadow q-mb-xl nostr-card--appointment"
         bordered
@@ -20,7 +23,7 @@
             />
           </div>
           <div class="q-my-lg">
-            <div class="text-h6">Vlad Stan</div>
+            <div class="text-h6">{{ calendar.name }}</div>
             <div class="text-subtitle2">
               Please follow the instructions to add an appointment to my
               schedule
@@ -92,6 +95,7 @@
                   color="secondary"
                   text-color="primary"
                   minimal
+                  :options="availableDaysFn"
                 />
               </div>
               <div class="slot scroll">
@@ -107,13 +111,14 @@
                       icon="access_time"
                       @click="toggleSlot(slot)"
                       padding="md"
+                      :disable="unavailableSlot(slot)"
                     />
                     <q-btn
                       v-if="timeSlot == slot"
                       color="primary"
                       label="Book"
                       class="q-ml-sm"
-                      @click="toggleConfirm"
+                      @click="createAppointment"
                     />
                   </q-btn-group>
                 </div>
@@ -123,22 +128,48 @@
         </q-card-section>
       </q-card>
     </div>
+    <div
+      class="flex-center"
+      v-else
+    >
+      <q-spinner-gears
+        color="secondary"
+        size="100px"
+      />
+    </div>
   </div>
 </template>
 
 <script setup>
-import {ref, onMounted} from 'vue'
+import {computed, ref, onMounted} from 'vue'
+import {api} from 'src/boot/axios'
 import {useRoute} from 'vue-router'
 import BgSvg from 'src/components/BgSvg.vue'
+import {extractUnavailableDates, timeslotsByInterval} from 'src/utils/date'
 
 const $route = useRoute()
+const loaded = ref(false)
+const today = new Date()
 
-const date = ref(new Date().toString())
-const title = ref($route.params.id)
-const timeSlots = ref(timeSlotsFn())
+const date = ref(today.toDateString())
+const calendar = ref({})
+const title = ref('')
+const timeSlots = ref([])
 const timeSlot = ref(null)
 const isConfirming = ref(false)
 const userData = ref({})
+
+const appointments = ref([])
+const unavailableDates = ref(new Set())
+
+const filteredAppointments = computed(() => {
+  console.log('filteredAppointments')
+  return appointments.value.filter(
+    a =>
+      new Date(a.start_time).toDateString() ===
+      new Date(date.value).toDateString()
+  )
+})
 
 const toggleSlot = slot => {
   timeSlot.value = timeSlot.value === slot ? null : slot
@@ -149,23 +180,105 @@ const toggleConfirm = () => {
 }
 
 function timeSlotsFn() {
-  const [startHour, startMinute] = '09:00'.split(':').map(Number)
-  const [endHour, endMinute] = '17:00'.split(':').map(Number)
-  const slots = []
+  const start = calendar.value.start_time
+  const end = calendar.value.end_time
+  const timeInterval = calendar.value.timeslots
+  const timeslots = timeslotsByInterval(start, end, timeInterval)
 
-  for (
-    let time = startHour * 60 + startMinute;
-    time <= endHour * 60 + endMinute;
-    time += 30
-  ) {
-    const hour = Math.floor(time / 60)
-    const minute = time % 60
-    slots.push(
-      `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
-    )
-  }
-  return slots
+  return timeslots
 }
+
+const unavailableFn = date => {
+  return !unavailableDates.value.has(date)
+}
+
+const availableDaysFn = date => {
+  if (!calendar.value.available_days) return false
+  if (new Date(date) < new Date()) return false
+  let weekday = new Date(date).getDay() - 1
+  return (
+    calendar.value.available_days.some(d => d === weekday) &&
+    unavailableFn(date)
+  )
+}
+
+const isBooked = time => {
+  return filteredAppointments.value.some(
+    a => a.start_time.split(' ')[1] === time
+  )
+}
+
+const unavailableSlot = time => {
+  if (isBooked(time)) return true
+  if (new Date(`${date.value} ${time}`) < today) return true
+  return false
+}
+
+// Fetch data
+async function getSchedule(calendarId) {
+  try {
+    const {data} = await api.get(`lncalendar/api/v1/schedule/${calendarId}`)
+    title.value = data.name
+    calendar.value = data
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+async function getAppointments(calendarId) {
+  try {
+    title
+    const {data} = await api.get(`lncalendar/api/v1/appointment/${calendarId}`)
+    appointments.value = data
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+async function getUnavailable(calendarId) {
+  try {
+    const {data} = await api.get(`/lncalendar/api/v1/unavailable/${calendarId}`)
+    unavailableDates.value = new Set([
+      ...unavailableDates.value,
+      ...extractUnavailableDates(data)
+    ])
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+// create appointment
+async function createAppointment() {
+  const timeslots = timeSlotsFn()
+  try {
+    console.log('createAppointment')
+    console.log(userData.value)
+    console.log(timeSlot.value)
+    console.log(timeslots[timeslots.indexOf(timeSlot.value) + 1])
+    // const {data} = await api.post(
+    //   `/lncalendar/api/v1/appointment`,
+    //   {
+    //     ...userData.value,
+    //     date: date.value,
+    //     time: timeSlot.value
+    //   }
+    // )
+    // appointments.value = [...appointments.value, data]
+    // userData.value = {}
+    // timeSlot.value = null
+    // toggleConfirm()
+  } catch (error) {
+    console.error(error)
+  }
+}
+onMounted(async () => {
+  const calendarId = $route.params.id
+  await getSchedule(calendarId)
+  await getAppointments(calendarId)
+  await getUnavailable(calendarId)
+  timeSlots.value = timeSlotsFn().slice(0, -1)
+  loaded.value = true
+})
 </script>
 
 <style lang="scss">

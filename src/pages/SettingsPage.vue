@@ -1,5 +1,21 @@
 <template>
   <q-page class="q-pa-md container">
+    <div class="q-gutter-md">
+      <q-breadcrumbs
+        class="text-grey-4 q-mb-lg"
+        active-color="secondary"
+      >
+        <q-breadcrumbs-el
+          icon="home"
+          to="/"
+        />
+        <q-breadcrumbs-el
+          label="Calendars"
+          to="/"
+        />
+        <q-breadcrumbs-el :label="calendar.name" />
+      </q-breadcrumbs>
+    </div>
     <q-card
       class="nostr-card text-white no-shadow q-my-xl"
       bordered
@@ -198,6 +214,7 @@ import {useQuasar} from 'quasar'
 import {extractUnavailableDates} from 'src/utils/date'
 
 import CreateEditCalendar from 'src/components/CreateEditCalendar.vue'
+import AppointmentTab from 'src/components/AppointmentTab.vue'
 import EventItem from 'src/components/EventItem.vue'
 import AvailabilityItem from 'src/components/AvailabilityItem.vue'
 
@@ -211,7 +228,7 @@ const filterRange = ref({
 })
 
 const calendar = $cal.calendars.find(c => c.id === $route.params.id)
-const tab = ref('unavailable')
+const tab = ref('appointments')
 const date = ref(new Date().toString())
 
 // APPOINTMENTS

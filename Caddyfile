@@ -2,7 +2,7 @@
 	debug
 }
 
-localhost:9090 {
+http://localhost:9090 {
 	handle /api/v1/ws* {
 		reverse_proxy localhost:5000
 	}
@@ -11,6 +11,10 @@ localhost:9090 {
 	}
 
 	handle /nostrnip5/api/v1* {
+		reverse_proxy localhost:5000
+	}
+
+	handle /lncalendar/api/v1* {
 		reverse_proxy localhost:5000
 	}
 
@@ -23,13 +27,13 @@ localhost:9090 {
 	}
 
 	handle /* {
-		reverse_proxy localhost:8081
+		reverse_proxy localhost:7070
 	}
 }
 
 localhost:9000 {
 	reverse_proxy localhost:5000 {
 		header_down Access-Control-Allow-Credentials true
-		header_down Access-Control-Allow-Origin http://localhost:8081
+		header_down Access-Control-Allow-Origin https://localhost:9090
 	}
 }

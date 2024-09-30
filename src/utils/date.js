@@ -43,8 +43,13 @@ export const extractUnavailableDates = arr => {
 
 const toMinutes = str => str.split(':').reduce((h, m) => h * 60 + +m)
 
-const toString = min =>
-  (Math.floor(min / 60) + ':' + (min % 60)).replace(/\b\d\b/, '0$&')
+// const toString = min =>
+//   (Math.floor(min / 60) + ':' + (min % 60)).replace(/\b\d\b/, '0$&')
+const toString = min => {
+  const hours = String(Math.floor(min / 60)).padStart(2, '0')
+  const minutes = String(min % 60).padStart(2, '0')
+  return `${hours}:${minutes}`
+}
 
 export function timeslotsByInterval(startStr, endStr, interval = 30) {
   let start = toMinutes(startStr)

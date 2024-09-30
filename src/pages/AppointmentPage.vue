@@ -262,7 +262,7 @@ const unavailableFn = date => {
 const availableDaysFn = date => {
   if (!calendar.value.available_days) return false
   if (new Date(date) < new Date()) return false
-  let weekday = new Date(date).getDay() - 1
+  let weekday = new Date(date).getDay()
   return (
     calendar.value.available_days.some(d => d === weekday) &&
     unavailableFn(date)

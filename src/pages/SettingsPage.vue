@@ -56,6 +56,28 @@
         >
           <q-card-section class="appointments">
             <div class="calendar">
+              <q-input
+                class="q-mb-lg"
+                v-model="searchStr"
+                dark
+                dense
+                rounded
+                standout
+                label="Search"
+                placeholder="Search for an appointment"
+                @keydown.escape="searchStr = ''"
+                ><template v-slot:append>
+                  <q-icon
+                    v-if="searchStr !== ''"
+                    name="close"
+                    @click="searchStr = ''"
+                    class="cursor-pointer"
+                  />
+                  <q-icon
+                    v-else
+                    name="search"
+                  /> </template
+              ></q-input>
               <q-date
                 class="full-width"
                 v-model="date"
@@ -73,7 +95,7 @@
                 <div class="q-mb-lg q-ml-md text-h6">
                   Appointments ({{ filteredAppointments.length }})
                 </div>
-                <q-input
+                <!-- <q-input
                   v-model="searchStr"
                   dark
                   dense
@@ -93,7 +115,7 @@
                       v-else
                       name="search"
                     /> </template
-                ></q-input>
+                ></q-input> -->
               </div>
               <q-scroll-area class="scroll-height">
                 <q-list>
@@ -280,13 +302,14 @@ const filteredUnavailable = computed(() => {
 
 const availableDaysFn = date => {
   if (new Date(date) < $cal.today) return false
-  let weekday = new Date(date).getDay() - 1
+  let weekday = new Date(date).getDay()
   return calendar.available_days.some(d => d === weekday) && unavailableFn(date)
 }
 
 async function getAppointments(id) {
   try {
     const {data} = await api.get(`/lncalendar/api/v1/appointment/${id}`)
+    console.log('data', data)
     $cal.appointments.set(
       id,
       data.filter(a => a.paid)
@@ -403,6 +426,7 @@ onMounted(async () => {
     year: $cal.today.getFullYear(),
     month: $cal.today.getMonth() + 1
   })
+  console.log('mounted', $cal.appointments.get(calendar.id))
 })
 </script>
 

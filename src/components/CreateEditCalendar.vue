@@ -178,17 +178,17 @@
         class="col-12 col-sm-6"
         dark
         standout
-        v-model="calendar_data.currency"
-        disable
-        label="Currency"
+        v-model="calendar_data.amount"
+        type="number"
+        label="How much to charge per appointment *"
       />
       <q-input
         class="col-12 col-sm-6"
         dark
         standout
-        v-model="calendar_data.amount"
-        type="number"
-        label="How much to charge per appointment *"
+        v-model="calendar_data.currency"
+        disable
+        label="Currency"
       />
     </div>
   </q-card-section>
@@ -205,7 +205,7 @@
       flat
       color="secondary"
       :label="isNew ? 'Cancel' : 'Reset'"
-      :disable="!hasChanged()"
+      :disable="!isNew && !hasChanged()"
     />
     <q-btn
       @click="handleCalendar"
@@ -253,8 +253,9 @@ const weekdays = [
 ]
 
 const timeSlots = [
-  {label: '15m', value: 15},
-  {label: '30m', value: 30},
+  {label: '15 minutes', value: 15},
+  {label: '30 minutes', value: 30},
+  {label: '45 minutes', value: 45},
   {label: '1 hour', value: 60},
   {label: '1.5 hours', value: 90},
   {label: '2 hours', value: 120},
@@ -265,7 +266,7 @@ const timeSlots = [
 const isNew = ref(true)
 const format24h = ref(true)
 const calendar_data = ref({
-  wallet: $acc.wallets[0],
+  wallet: $acc.wallets[0].value,
   name: props.name,
   timeslot: 30,
   start_day: 1,
@@ -273,7 +274,7 @@ const calendar_data = ref({
   start_time: '08:00',
   end_time: '17:00',
   currency: 'sats',
-  amount: 0,
+  amount: null,
   timeslot: 30
 })
 

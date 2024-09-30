@@ -43,7 +43,7 @@ export default route(function (/* { store, ssrContext } */) {
       //to.name !== 'Login'
     ) {
       // redirect the user to the login page
-      return (window.location.href = 'https://my.nostr.com/login')
+      return //(window.location.href = 'https://my.nostr.com/login')
     }
     if (to.path == '/') {
       return

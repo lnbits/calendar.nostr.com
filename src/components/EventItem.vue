@@ -73,7 +73,6 @@
 import {timeFromNow} from 'src/utils/date'
 
 const props = defineProps(['event', 'delete'])
-console.log(props.event)
 
 const scheduled = timeFromNow(props.event.start_time)
 const booked = timeFromNow(props.event.created_at)

@@ -1,6 +1,12 @@
 <template>
   <q-page class="q-pa-md container">
-    <div class="q-gutter-md">
+    <div v-if="fullcalendar">
+      <FullCalendar :events="$cal.appointments.get(calendar.id)" />
+    </div>
+    <div
+      v-else
+      class="q-gutter-md"
+    >
       <q-breadcrumbs
         class="text-grey-4 q-mb-lg"
         active-color="secondary"
@@ -141,6 +147,19 @@
               </q-scroll-area>
             </div>
           </q-card-section>
+          <q-card-actions
+            class="q-pa-md"
+            align="right"
+          >
+            <q-btn
+              rounded
+              @click="fullcalendar = true"
+              label="Full Calendar"
+              color="secondary"
+              text-color="primary"
+              class="text-capitalize"
+            />
+          </q-card-actions>
         </q-tab-panel>
         <q-tab-panel
           name="unavailable"
@@ -247,6 +266,7 @@ import {extractUnavailableDates} from 'src/utils/date'
 import CreateEditCalendar from 'src/components/CreateEditCalendar.vue'
 import EventItem from 'src/components/EventItem.vue'
 import AvailabilityItem from 'src/components/AvailabilityItem.vue'
+import FullCalendar from 'src/components/FullCalendar.vue'
 
 const $cal = useCalendarStore()
 const $route = useRoute()
@@ -260,6 +280,7 @@ const filterRange = ref({
 const calendar = $cal.calendars.find(c => c.id === $route.params.id)
 const tab = ref('appointments')
 const date = ref($cal.getDateStr)
+const fullcalendar = ref(false)
 
 // APPOINTMENTS
 //const appointments = ref([])
@@ -331,7 +352,6 @@ const availableDaysFn = date => {
 async function getAppointments(id) {
   try {
     const {data} = await api.get(`/lncalendar/api/v1/appointment/${id}`)
-    console.log('data', data)
     $cal.appointments.set(
       id,
       data.filter(a => a.paid)
@@ -448,6 +468,19 @@ const resetAppointmentFilter = () => {
   date.value = $cal.getDateStr
 }
 
+//fullcalendar
+const search = ref('')
+
+const updateView = val => {
+  $acc.setView(val)
+}
+
+const handleSearch = async () => {
+  if (!handle.value) {
+    return
+  }
+}
+
 onMounted(async () => {
   const id = $route.params.id
   await getAppointments(id)
@@ -456,7 +489,6 @@ onMounted(async () => {
     year: $cal.today.getFullYear(),
     month: $cal.today.getMonth() + 1
   })
-  console.log('mounted', $cal.appointments.get(calendar.id))
 })
 </script>
 
@@ -486,6 +518,32 @@ onMounted(async () => {
   .appointments {
     display: grid;
     grid-template-columns: auto 1fr;
+  }
+}
+
+.dashbar {
+  display: block;
+
+  &--btn {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+}
+
+// full
+.full-calendar {
+  min-height: inherit;
+}
+
+@media screen and (min-width: $breakpoint-sm-max) {
+  .dashbar {
+    display: flex;
+    justify-content: space-between;
+
+    &--btn {
+      margin-bottom: 0;
+    }
   }
 }
 </style>

@@ -56,38 +56,47 @@
         >
           <q-card-section class="appointments">
             <div class="calendar">
-              <q-input
-                class="q-mb-lg"
-                v-model="searchStr"
-                dark
-                dense
-                rounded
-                standout
-                label="Search"
-                placeholder="Search for an appointment"
-                @keydown.escape="searchStr = ''"
-                ><template v-slot:append>
-                  <q-icon
-                    v-if="searchStr !== ''"
-                    name="close"
-                    @click="searchStr = ''"
-                    class="cursor-pointer"
-                  />
-                  <q-icon
-                    v-else
-                    name="search"
-                  /> </template
-              ></q-input>
               <q-date
                 class="full-width"
                 v-model="date"
                 minimal
                 dark
                 flat
+                range
                 color="secondary"
                 :options="availableDaysFn"
                 :events="appointmentsFn"
                 @navigation="handleNavigation"
+                @range-end="handleAppointmentFilter"
+              />
+              <div v-if="appointmentsRangeFilter">
+                <small class="text-grey-4"
+                  >Filter from
+                  {{
+                    new Date(
+                      appointmentsRangeFilter.from.year,
+                      appointmentsRangeFilter.from.month - 1,
+                      appointmentsRangeFilter.from.day
+                    ).toDateString()
+                  }}
+                  to
+                  {{
+                    new Date(
+                      appointmentsRangeFilter.to.year,
+                      appointmentsRangeFilter.to.month - 1,
+                      appointmentsRangeFilter.to.day
+                    ).toDateString()
+                  }}</small
+                >
+              </div>
+              <q-btn
+                v-if="appointmentsRangeFilter"
+                rounded
+                @click="resetAppointmentFilter"
+                label="Reset Filter"
+                color="secondary"
+                text-color="primary"
+                class="text-capitalize q-mt-md"
               />
             </div>
             <div class="appointments--items">
@@ -95,7 +104,7 @@
                 <div class="q-mb-lg q-ml-md text-h6">
                   Appointments ({{ filteredAppointments.length }})
                 </div>
-                <!-- <q-input
+                <q-input
                   v-model="searchStr"
                   dark
                   dense
@@ -115,7 +124,7 @@
                       v-else
                       name="search"
                     /> </template
-                ></q-input> -->
+                ></q-input>
               </div>
               <q-scroll-area class="scroll-height">
                 <q-list>
@@ -236,7 +245,6 @@ import {useQuasar} from 'quasar'
 import {extractUnavailableDates} from 'src/utils/date'
 
 import CreateEditCalendar from 'src/components/CreateEditCalendar.vue'
-import AppointmentTab from 'src/components/AppointmentTab.vue'
 import EventItem from 'src/components/EventItem.vue'
 import AvailabilityItem from 'src/components/AvailabilityItem.vue'
 
@@ -251,15 +259,28 @@ const filterRange = ref({
 
 const calendar = $cal.calendars.find(c => c.id === $route.params.id)
 const tab = ref('appointments')
-const date = ref(new Date().toString())
+const date = ref($cal.getDateStr)
 
 // APPOINTMENTS
 //const appointments = ref([])
 const appointmentsDates = ref([])
 const searchStr = ref('')
+const appointmentsRangeFilter = ref(null)
 
 const filteredAppointments = computed(() => {
-  const appointments = $cal.appointments.get(calendar.id) || []
+  let appointments = $cal.appointments.get(calendar.id) || []
+  if (appointmentsRangeFilter.value) {
+    const {from, to} = appointmentsRangeFilter.value
+    if (from && to) {
+      appointments = appointments.filter(a => {
+        return (
+          new Date(a.start_time) >=
+            new Date(from.year, from.month - 1, from.day) &&
+          new Date(a.start_time) <= new Date(to.year, to.month - 1, to.day)
+        )
+      })
+    }
+  }
   if (searchStr.value.length > 2) {
     return appointments.filter(a => {
       return (
@@ -301,6 +322,7 @@ const filteredUnavailable = computed(() => {
 })
 
 const availableDaysFn = date => {
+  if (new Date(date).toDateString() == $cal.today.toDateString()) return true
   if (new Date(date) < $cal.today) return false
   let weekday = new Date(date).getDay()
   return calendar.available_days.some(d => d === weekday) && unavailableFn(date)
@@ -414,8 +436,16 @@ const handleRangeStart = () => {
 }
 
 const handleRangeEnd = () => {
-  console.log(unavailableRange.value)
   unavailableRangeIsSet.value = true
+}
+
+const handleAppointmentFilter = range => {
+  appointmentsRangeFilter.value = range
+}
+
+const resetAppointmentFilter = () => {
+  appointmentsRangeFilter.value = null
+  date.value = $cal.getDateStr
 }
 
 onMounted(async () => {

@@ -13,7 +13,7 @@ export const useCalendarStore = defineStore('calendar', {
   getters: {
     // get date is type string
     getDateStr() {
-      return this.date.toString()
+      return this.date.toDateString()
     }
   },
   actions: {

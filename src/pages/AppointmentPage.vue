@@ -208,7 +208,7 @@ const $q = useQuasar()
 const loaded = ref(false)
 const today = new Date()
 
-const date = ref(today.toDateString())
+const date = ref('')
 const calendar = ref({})
 const title = ref('')
 const timeSlots = ref([])
@@ -411,6 +411,7 @@ onMounted(async () => {
   await getUnavailable(calendarId)
   timeSlots.value = timeSlotsFn().slice(0, -1)
   loaded.value = true
+  date.value = new Date().toDateString()
 })
 </script>
 

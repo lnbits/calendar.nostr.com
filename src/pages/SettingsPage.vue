@@ -148,17 +148,20 @@
               </q-scroll-area>
             </div>
           </q-card-section>
-          <q-card-actions
-            class="q-pa-md"
-            align="right"
-          >
+          <q-card-actions align="right">
             <q-btn
-              rounded
+              round
               @click="fullcalendar = true"
-              label="Full Calendar"
               color="secondary"
               text-color="primary"
-              class="text-capitalize"
+              icon="open_in_full"
+            />
+            <q-btn
+              round
+              @click="handleShare"
+              color="secondary"
+              text-color="primary"
+              icon="share"
             />
           </q-card-actions>
         </q-tab-panel>
@@ -261,7 +264,7 @@ import {computed, ref, onMounted} from 'vue'
 import {api} from 'src/boot/axios'
 import {useCalendarStore} from 'src/stores/calendar'
 import {useRoute} from 'vue-router'
-import {useQuasar} from 'quasar'
+import {useQuasar, copyToClipboard} from 'quasar'
 import {extractUnavailableDates} from 'src/utils/date'
 
 import CreateEditCalendar from 'src/components/CreateEditCalendar.vue'
@@ -475,6 +478,26 @@ const handleAppointmentFilter = range => {
 const resetAppointmentFilter = () => {
   appointmentsRangeFilter.value = null
   date.value = $cal.getDateStr
+}
+
+const handleShare = async () => {
+  const url = `${window.location.origin}/${calendar.id}`
+  const data = {
+    title: 'Nostr Calendar',
+    text: 'Check out my calendar!',
+    url
+  }
+  try {
+    await navigator.share(data)
+  } catch (error) {
+    console.debug('Error:', error)
+    copyToClipboard(url)
+    $q.notify({
+      message: 'Link copied to clipboard!',
+      color: 'positive',
+      icon: 'done'
+    })
+  }
 }
 
 onMounted(async () => {

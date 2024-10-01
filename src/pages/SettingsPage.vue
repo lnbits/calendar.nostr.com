@@ -415,7 +415,11 @@ async function deleteUnavailable(unavailableId) {
 
 async function createUnavailable() {
   try {
-    const {from, to} = unavailableRange.value
+    let {from, to} = unavailableRange.value
+    if (!from || !to) {
+      from = unavailableRange.value
+      to = unavailableRange.value
+    }
     const {data} = await api.post(`/lncalendar/api/v1/unavailable`, {
       start_time: from,
       end_time: to,
@@ -471,19 +475,6 @@ const handleAppointmentFilter = range => {
 const resetAppointmentFilter = () => {
   appointmentsRangeFilter.value = null
   date.value = $cal.getDateStr
-}
-
-//fullcalendar
-const search = ref('')
-
-const updateView = val => {
-  $acc.setView(val)
-}
-
-const handleSearch = async () => {
-  if (!handle.value) {
-    return
-  }
 }
 
 onMounted(async () => {

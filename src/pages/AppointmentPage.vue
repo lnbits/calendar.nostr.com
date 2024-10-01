@@ -60,6 +60,7 @@
               v-model.trim="userData.email"
               type="email"
               label="Your email (optional, if you want a reply)"
+              disable
             ></q-input>
             <q-input
               dark

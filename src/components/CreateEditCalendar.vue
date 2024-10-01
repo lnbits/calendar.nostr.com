@@ -5,6 +5,10 @@
       Create a calendar to start accepting appointments
     </div>
   </q-card-section>
+  <q-card-section v-else>
+    <div class="text-h6">{{ calendar_data.name }}</div>
+    <div class="text-subtitle2">Edit the calendar</div>
+  </q-card-section>
   <q-card-section>
     <div class="row q-mb-lg q-col-gutter-md">
       <q-select

@@ -1,12 +1,6 @@
 <template>
   <q-page class="q-pa-md container">
-    <div v-if="fullcalendar">
-      <FullCalendar :events="$cal.appointments.get(calendar.id)" />
-    </div>
-    <div
-      v-else
-      class="q-gutter-md"
-    >
+    <div class="q-gutter-md">
       <q-breadcrumbs
         class="text-grey-4 q-mb-lg"
         active-color="secondary"
@@ -22,7 +16,14 @@
         <q-breadcrumbs-el :label="calendar.name" />
       </q-breadcrumbs>
     </div>
+    <div v-if="fullcalendar">
+      <FullCalendar
+        :events="$cal.appointments.get(calendar.id)"
+        :close="() => (fullcalendar = false)"
+      />
+    </div>
     <q-card
+      v-else
       class="nostr-card text-white no-shadow q-my-xl"
       bordered
     >
@@ -436,6 +437,10 @@ async function createUnavailable() {
       color: 'negative',
       icon: 'warning'
     })
+  } finally {
+    unavailableRangeIsSet.value = false
+    unavailableName.value = ''
+    unavailableRange.value = null
   }
 }
 

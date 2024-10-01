@@ -2,6 +2,17 @@
   <q-page class="q-pa-md">
     <div class="container q-py-md dashbar">
       <div class="dashbar--btn">
+        <div class="self-center">
+          <q-btn
+            outline
+            round
+            color="secondary"
+            icon="arrow_back"
+            class="q-mr-lg"
+            @click="close"
+            ><q-tooltip>Back</q-tooltip></q-btn
+          >
+        </div>
         <q-btn-toggle
           class="dashbar--btn"
           round
@@ -58,7 +69,7 @@ import {ref} from 'vue'
 import VueCal from 'vue-cal'
 import {useCalendarStore} from 'src/stores/calendar'
 
-const props = defineProps(['events'])
+const props = defineProps(['events', 'close'])
 
 const $cal = useCalendarStore()
 

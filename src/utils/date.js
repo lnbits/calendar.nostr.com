@@ -43,8 +43,6 @@ export const extractUnavailableDates = arr => {
 
 const toMinutes = str => str.split(':').reduce((h, m) => h * 60 + +m)
 
-// const toString = min =>
-//   (Math.floor(min / 60) + ':' + (min % 60)).replace(/\b\d\b/, '0$&')
 const toString = min => {
   const hours = String(Math.floor(min / 60)).padStart(2, '0')
   const minutes = String(min % 60).padStart(2, '0')
@@ -58,4 +56,28 @@ export function timeslotsByInterval(startStr, endStr, interval = 30) {
     {length: Math.floor((end - start) / interval) + 1},
     (_, i) => toString(start + i * interval)
   )
+}
+
+export function addMinutes(time, step) {
+  const [hours, minutes] = time.split(':').map(Number)
+  let newHours = hours
+  let newMinutes = minutes + step
+
+  if (newMinutes >= 60) {
+    newHours = (newHours + 1) % 24 // To handle the case where hours can go over 24
+    newMinutes -= 60
+  }
+
+  const newTime = `${String(newHours).padStart(2, '0')}:${String(
+    newMinutes
+  ).padStart(2, '0')}`
+  return newTime
+}
+const pad = n => `${n}`.padStart(2, '0')
+
+export function formatDate(date) {
+  // return date as YYYY/MM/DD
+  return `${date.getFullYear()}/${pad(date.getMonth() + 1)}/${pad(
+    date.getDate()
+  )}`
 }

@@ -186,14 +186,25 @@
         type="number"
         label="How much to charge per appointment *"
       />
-      <q-input
+      <q-select
+        class="col-12 col-sm-6"
+        dark
+        standout
+        map-options
+        emit-value
+        v-model="calendar_data.currency"
+        :options="currencies"
+        label="Weekday end *"
+      >
+      </q-select>
+      <!-- <q-input
         class="col-12 col-sm-6"
         dark
         standout
         v-model="calendar_data.currency"
         disable
         label="Currency"
-      />
+      /> -->
     </div>
   </q-card-section>
   <q-separator color="secondary"></q-separator>
@@ -277,12 +288,13 @@ const calendar_data = ref({
   end_day: 5,
   start_time: '08:00',
   end_time: '17:00',
-  currency: 'sats',
+  currency: 'sat',
   amount: null,
   timeslot: 30
 })
 
 let originalData = {...props.calendar} || {}
+const currencies = ref(['sat'])
 
 const hasChanged = () => {
   return (
@@ -351,10 +363,24 @@ async function createCalendar() {
   }
 }
 
-onMounted(() => {
+async function get_currency() {
+  try {
+    const {data} = await api.get('/lncalendar/api/v1/currencies')
+    currencies.value = [currencies.value, ...data]
+  } catch (error) {
+    $q.notify({
+      message: 'Failed to get currency!',
+      color: 'negative',
+      icon: 'warning'
+    })
+  }
+}
+
+onMounted(async () => {
   if (props.calendar) {
     isNew.value = false
     calendar_data.value = props.calendar
   }
+  await get_currency()
 })
 </script>

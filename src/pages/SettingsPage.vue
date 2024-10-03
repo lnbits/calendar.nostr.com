@@ -141,6 +141,7 @@
                   >
                     <EventItem
                       :event="event"
+                      :edit="editAppointmentDialog"
                       :delete="deleteAppointment"
                     />
                   </template>
@@ -256,6 +257,106 @@
         </q-tab-panel>
       </q-tab-panels>
     </q-card>
+    <q-dialog
+      v-model="showDialog"
+      :backdrop-filter="'blur(4px) saturate(150%)'"
+    >
+      <q-card
+        style="width: 350px"
+        class="q-pa-md text-center"
+      >
+        <q-card-section>
+          <p class="caption">Reschedule appointment</p>
+          <div
+            class="q-pa-md"
+            style="max-width: 300px"
+          >
+            <q-input
+              filled
+              v-model="dialogData.newDate"
+            >
+              <template v-slot:prepend>
+                <q-icon
+                  name="event"
+                  class="cursor-pointer"
+                >
+                  <q-popup-proxy
+                    cover
+                    transition-show="scale"
+                    transition-hide="scale"
+                  >
+                    <q-date
+                      v-model="dialogData.newDate"
+                      mask="YYYY/MM/DD HH:mm"
+                    >
+                      <div class="row items-center justify-end">
+                        <q-btn
+                          v-close-popup
+                          label="Close"
+                          color="primary"
+                          flat
+                        />
+                      </div>
+                    </q-date>
+                  </q-popup-proxy>
+                </q-icon>
+              </template>
+
+              <template v-slot:append>
+                <q-icon
+                  name="access_time"
+                  class="cursor-pointer"
+                >
+                  <q-popup-proxy
+                    cover
+                    transition-show="scale"
+                    transition-hide="scale"
+                  >
+                    <q-time
+                      v-model="dialogData.newDate"
+                      mask="YYYY/MM/DD HH:mm"
+                      format24h
+                    >
+                      <div class="row items-center justify-end">
+                        <q-btn
+                          v-close-popup
+                          label="Close"
+                          color="primary"
+                          flat
+                        />
+                      </div>
+                    </q-time>
+                  </q-popup-proxy>
+                </q-icon>
+              </template>
+            </q-input>
+          </div>
+        </q-card-section>
+        <q-card-section>
+          <div class="row q-mt-md">
+            <q-btn
+              v-if="showDialog"
+              rounded
+              unelevated
+              text-color="primary"
+              color="secondary"
+              @click="editAppointment"
+              label="Reschedule"
+              class="text-capitalize"
+              :disable="dialogData.newDate === dialogData.start_time"
+            ></q-btn>
+            <q-btn
+              rounded
+              @click="resetAppointmentDialog"
+              flat
+              color="grey"
+              class="q-ml-auto text-capitalize"
+              label="Close"
+            ></q-btn>
+          </div>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
@@ -265,7 +366,7 @@ import {api} from 'src/boot/axios'
 import {useCalendarStore} from 'src/stores/calendar'
 import {useRoute} from 'vue-router'
 import {useQuasar, copyToClipboard} from 'quasar'
-import {extractUnavailableDates} from 'src/utils/date'
+import {extractUnavailableDates, addMinutes, formatDate} from 'src/utils/date'
 
 import CreateEditCalendar from 'src/components/CreateEditCalendar.vue'
 import EventItem from 'src/components/EventItem.vue'
@@ -291,6 +392,8 @@ const fullcalendar = ref(false)
 const appointmentsDates = ref([])
 const searchStr = ref('')
 const appointmentsRangeFilter = ref(null)
+const showDialog = ref(false)
+const dialogData = ref(null)
 
 const filteredAppointments = computed(() => {
   let appointments = $cal.appointments.get(calendar.id) || []
@@ -321,6 +424,56 @@ const filteredAppointments = computed(() => {
     )
   })
 })
+
+const editAppointmentDialog = id => {
+  const appointment = $cal.appointments.get(calendar.id).find(a => a.id === id)
+  showDialog.value = true
+  dialogData.value = {
+    ...appointment,
+    newDate: appointment.start_time
+  }
+  console.log(dialogData.value)
+}
+
+const resetAppointmentDialog = () => {
+  showDialog.value = false
+  dialogData.value = null
+}
+
+async function editAppointment() {
+  const appointment = dialogData.value
+  appointment.start_time = appointment.newDate
+  const newTime = addMinutes(
+    appointment.start_time.split(' ')[1],
+    calendar.timeslot
+  )
+  appointment.end_time = `${appointment.start_time.split(' ')[0]} ${newTime}`
+  try {
+    const {data} = await api.put(
+      `/lncalendar/api/v1/appointment/${appointment.id}`,
+      {
+        start_time: appointment.start_time,
+        end_time: appointment.end_time
+      }
+    )
+    $cal.updateAppointment(calendar.id, data)
+    // TODO: Nostr notification
+    $q.notify({
+      message: 'Appointment rescheduled!',
+      color: 'positive',
+      icon: 'done'
+    })
+  } catch (error) {
+    console.error(error)
+    $q.notify({
+      message: 'Failed to reschedule appointment!',
+      color: 'negative',
+      icon: 'warning'
+    })
+  } finally {
+    resetAppointmentDialog()
+  }
+}
 
 // UNAVAILABLE
 // const unavailable = ref([])
@@ -355,18 +508,22 @@ const availableDaysFn = date => {
 
 async function getAppointments(id) {
   try {
+    await api.get(`/lncalendar/api/v1/appointment/purge/${id}`)
     const {data} = await api.get(`/lncalendar/api/v1/appointment/${id}`)
+    console.log(data)
     $cal.appointments.set(
       id,
       data.filter(a => a.paid)
     )
-    appointmentsDates.value = data.map(a => a.start_time.split(' ')[0])
+    const appointments = $cal.appointments.get(id)
+    appointmentsDates.value = appointments.map(a => a.start_time.split(' ')[0])
   } catch (error) {
     console.error(error)
   }
 }
 
 async function deleteAppointment(appointmentId) {
+  // TODO: Nostr notification for user
   try {
     await api.delete(`/lncalendar/api/v1/appointment/${appointmentId}`)
     $cal.deleteAppointment(calendar.id, appointmentId)

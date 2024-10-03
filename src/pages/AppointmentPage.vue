@@ -163,6 +163,7 @@
             ></vue-qrcode>
           </a>
         </div>
+        <p>{{ amountFormatted }}</p>
       </q-card-section>
       <q-card-section>
         <q-linear-progress
@@ -199,16 +200,20 @@ import {computed, ref, onMounted} from 'vue'
 import {api} from 'src/boot/axios'
 import {useRoute} from 'vue-router'
 import BgSvg from 'src/components/BgSvg.vue'
-import {extractUnavailableDates, timeslotsByInterval} from 'src/utils/date'
+import {
+  extractUnavailableDates,
+  timeslotsByInterval,
+  formatDate
+} from 'src/utils/date'
 import VueQrcode from '@chenfengyuan/vue-qrcode'
-import {useQuasar, copyToClipboard} from 'quasar'
+import {useQuasar, copyToClipboard, format} from 'quasar'
 
 const $route = useRoute()
 const $q = useQuasar()
 const loaded = ref(false)
 const today = new Date()
 
-const date = ref('')
+const date = ref(formatDate(today))
 const calendar = ref({})
 const title = ref('')
 const timeSlots = ref([])
@@ -218,6 +223,14 @@ const userData = ref({})
 
 const appointments = ref([])
 const unavailableDates = ref(new Set())
+
+const amountFormatted = computed(() => {
+  if (!calendar.value.currency == 'sat') return `${calendar.value.amount} sats`
+  return calendar.value.amount.toLocaleString(navigator.language, {
+    style: 'currency',
+    currency: calendar.value.currency
+  })
+})
 
 const filteredAppointments = computed(() => {
   return appointments.value.filter(
@@ -299,7 +312,7 @@ async function getSchedule(calendarId) {
 
 async function getAppointments(calendarId) {
   try {
-    title
+    // await api.get(`/lncalendar/api/v1/appointment/purge/${calendarId}`)
     const {data} = await api.get(`lncalendar/api/v1/appointment/${calendarId}`)
     appointments.value = data
     console.log(data)
@@ -411,7 +424,6 @@ onMounted(async () => {
   await getUnavailable(calendarId)
   timeSlots.value = timeSlotsFn().slice(0, -1)
   loaded.value = true
-  date.value = new Date().toDateString()
 })
 </script>
 

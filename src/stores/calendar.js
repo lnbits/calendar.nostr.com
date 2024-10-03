@@ -1,4 +1,5 @@
 import {defineStore} from 'pinia'
+import {formatDate} from 'src/utils/date'
 
 export const useCalendarStore = defineStore('calendar', {
   state: () => ({
@@ -13,7 +14,7 @@ export const useCalendarStore = defineStore('calendar', {
   getters: {
     // get date is type string
     getDateStr() {
-      return this.date.toDateString()
+      return formatDate(this.date)
     }
   },
   actions: {
@@ -44,6 +45,12 @@ export const useCalendarStore = defineStore('calendar', {
         return
       }
       this.appointments.set(calendarId, appointments)
+    },
+    updateAppointment(calendarId, appointment) {
+      const currentAppointments = this.appointments.get(calendarId)
+      const index = currentAppointments.findIndex(a => a.id === appointment.id)
+      currentAppointments[index] = appointment
+      this.appointments.set(calendarId, currentAppointments)
     },
     deleteAppointment(calendarId, id) {
       const currentAppointments = this.appointments

@@ -44,7 +44,7 @@
               <q-item
                 clickable
                 v-close-popup
-                disable
+                @click="editEvent"
               >
                 <q-item-section>Reschedule</q-item-section>
               </q-item>
@@ -72,13 +72,17 @@
 <script setup>
 import {timeFromNow} from 'src/utils/date'
 
-const props = defineProps(['event', 'delete'])
+const props = defineProps(['event', 'edit', 'delete'])
 
 const scheduled = timeFromNow(props.event.start_time)
 const booked = timeFromNow(props.event.created_at)
 
 const deleteEvent = () => {
   props.delete(props.event.id)
+}
+
+const editEvent = () => {
+  props.edit(props.event.id)
 }
 
 const timeSlotString = () => {

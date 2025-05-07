@@ -84,8 +84,10 @@ import {api} from 'boot/axios'
 import {ref} from 'vue'
 import {useAccountStore} from 'src/stores/account'
 import {useQuasar} from 'quasar'
+import {useRouter} from 'vue-router'
 
 const $q = useQuasar()
+const $router = useRouter()
 
 const username = ref('')
 const password = ref('')
@@ -93,22 +95,25 @@ const password_repeat = ref('')
 const isRegister = ref(false)
 const $acc = useAccountStore()
 
-const login = async () => {
+async function login() {
   if (isRegister.value) {
     return register()
   }
   try {
-    const {data} = await api.post('/auth', {
+    const {data} = await api.post('/api/v1/auth', {
       username: username.value,
       password: password.value
     })
-    $acc.addUsername(username.value)
+    console.log(data)
+    localStorage.setItem('username', username.value)
+    // $acc.addUsername(username.value)
     $q.notify({
       message: 'Logged in!',
       color: 'positive'
     })
+    setTimeout(() => $router.push('/'), 500)
   } catch (error) {
-    console.warning(error)
+    console.warn(error)
     $q.notify({
       message: 'Failed to login!',
       color: 'negative',
@@ -117,20 +122,23 @@ const login = async () => {
   }
 }
 
-const register = async () => {
+async function register() {
   try {
-    const {data} = await api.post('/auth/register', {
+    const {data} = await api.post('/api/v1/auth/register', {
       username: username.value,
       password: password.value,
       password_repeat: password.value
     })
-    $acc.addUsername(username.value)
+    localStorage.setItem('username', username.value)
+    // $acc.addUsername(username.value)
+    // console.log(data)
     // enable lncalendar extension
-    await api.post('/extension/lncalendar/enable')
-    this.q.notify({
+    // await api.post('/api/v1/extension/lncalendar/enable')
+    $q.notify({
       message: 'Signed Up!',
       color: 'positive'
     })
+    setTimeout(() => $router.push('/'), 500)
   } catch (error) {
     console.warn(error)
     $q.notify({
